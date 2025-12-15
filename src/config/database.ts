@@ -1,12 +1,39 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
+// Load environment variables from .env file (for local development)
+// In production (Railway), environment variables are set by the platform
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/todo-app';
+// Get MongoDB URI from environment variable
+// In production, MONGODB_URI MUST be set (no fallback)
+// In development, fallback to localhost for local testing
+const getMongoUri = (): string | undefined => {
+  const uri = process.env.MONGODB_URI;
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT;
+  
+  if (uri) {
+    return uri;
+  }
+  
+  // Only use localhost fallback in development
+  if (!isProduction) {
+    return 'mongodb://localhost:27017/todo-app';
+  }
+  
+  // In production, return undefined to trigger error
+  return undefined;
+};
+
+const MONGODB_URI = getMongoUri();
 
 export const connectDatabase = async (): Promise<void> => {
   try {
+    // Debug: Log environment variable status
+    console.log('🔍 Environment check:');
+    console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`   MONGODB_URI set: ${!!process.env.MONGODB_URI}`);
+    
     // Log connection attempt (mask password for security)
     const maskedUri = MONGODB_URI
       ? MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, '//$1:***@')
@@ -16,16 +43,28 @@ export const connectDatabase = async (): Promise<void> => {
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
 
     // Validate connection string
-    if (!MONGODB_URI || MONGODB_URI.includes('<') || MONGODB_URI.includes('YOUR_ACTUAL_PASSWORD')) {
+    if (!MONGODB_URI) {
       console.error('');
-      console.error('❌ MONGODB_URI environment variable is missing or invalid!');
+      console.error('❌ MONGODB_URI environment variable is missing!');
       console.error('');
       console.error('💡 For Railway deployment:');
       console.error('   1. Go to your Railway project → Variables tab');
       console.error('   2. Add variable: MONGODB_URI');
       console.error('   3. Value: mongodb+srv://username:password@cluster.mongodb.net/todo-app?retryWrites=true&w=majority');
-      console.error('   4. Redeploy your service');
-      throw new Error('Invalid MongoDB connection string. Please check your .env file or Railway environment variables.');
+      console.error('   4. Make sure variable name is exactly: MONGODB_URI (case-sensitive)');
+      console.error('   5. Redeploy your service after adding the variable');
+      console.error('');
+      console.error('💡 For local development:');
+      console.error('   1. Create a .env file in the project root');
+      console.error('   2. Add: MONGODB_URI=your_connection_string');
+      throw new Error('MONGODB_URI environment variable is not set. Please set it in Railway variables or .env file.');
+    }
+    
+    if (MONGODB_URI.includes('<') || MONGODB_URI.includes('YOUR_ACTUAL_PASSWORD')) {
+      console.error('');
+      console.error('❌ MONGODB_URI contains placeholder values!');
+      console.error('   Replace <password> or YOUR_ACTUAL_PASSWORD with your real password');
+      throw new Error('Invalid MongoDB connection string. Please replace placeholder values with actual credentials.');
     }
 
     // Check if using localhost (common mistake)
