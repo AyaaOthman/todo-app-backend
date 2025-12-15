@@ -7,9 +7,34 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/todo-a
 
 export const connectDatabase = async (): Promise<void> => {
   try {
+    // Log connection attempt (mask password for security)
+    const maskedUri = MONGODB_URI
+      ? MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, '//$1:***@')
+      : 'not set';
+    console.log('🔌 Attempting MongoDB connection...');
+    console.log(`   URI: ${maskedUri}`);
+    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+
     // Validate connection string
     if (!MONGODB_URI || MONGODB_URI.includes('<') || MONGODB_URI.includes('YOUR_ACTUAL_PASSWORD')) {
-      throw new Error('Invalid MongoDB connection string. Please check your .env file.');
+      console.error('');
+      console.error('❌ MONGODB_URI environment variable is missing or invalid!');
+      console.error('');
+      console.error('💡 For Railway deployment:');
+      console.error('   1. Go to your Railway project → Variables tab');
+      console.error('   2. Add variable: MONGODB_URI');
+      console.error('   3. Value: mongodb+srv://username:password@cluster.mongodb.net/todo-app?retryWrites=true&w=majority');
+      console.error('   4. Redeploy your service');
+      throw new Error('Invalid MongoDB connection string. Please check your .env file or Railway environment variables.');
+    }
+
+    // Check if using localhost (common mistake)
+    if (MONGODB_URI.includes('localhost') || MONGODB_URI.includes('127.0.0.1')) {
+      console.error('');
+      console.error('⚠️  WARNING: Using localhost connection string!');
+      console.error('   This will not work in production/deployment.');
+      console.error('   Make sure MONGODB_URI is set to your MongoDB Atlas connection string.');
+      console.error('');
     }
 
     const connectionOptions: any = {
@@ -19,8 +44,8 @@ export const connectDatabase = async (): Promise<void> => {
     };
 
     // Handle SSL certificate issues (common with corporate proxies/firewalls)
-    // Only allow invalid certificates in development
-    if (process.env.NODE_ENV === 'development') {
+    // Allow invalid certificates in development and for Railway (which may have proxy issues)
+    if (process.env.NODE_ENV === 'development' || process.env.RAILWAY_ENVIRONMENT) {
       connectionOptions.tlsAllowInvalidCertificates = true;
     }
 
@@ -46,9 +71,10 @@ export const connectDatabase = async (): Promise<void> => {
     } else if (error.message.includes('authentication failed')) {
       console.error('🔐 Authentication Error');
       console.error('   Check your username and password in the connection string');
-    } else if (error.message.includes('IP')) {
+    } else if (error.message.includes('IP') || error.message.includes('whitelist')) {
       console.error('🌐 IP Whitelist Error');
       console.error('   Add your IP address in MongoDB Atlas → Network Access');
+      console.error('   For Railway: Add 0.0.0.0/0 (allow all) or Railway\'s IP ranges');
     } else if (error.message.includes('certificate') || error.message.includes('TLS')) {
       console.error('🔒 SSL/TLS Certificate Error Detected');
       console.error('');
