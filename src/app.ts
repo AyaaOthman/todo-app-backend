@@ -61,6 +61,26 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Todo App API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      docs: '/api-docs',
+      auth: {
+        signup: 'POST /api/auth/signup',
+        login: 'POST /api/auth/login',
+      },
+      taskLists: 'GET/POST/PUT/DELETE /api/task-lists',
+      tasks: 'GET/POST/PUT/PATCH/DELETE /api/tasks',
+    },
+    documentation: '/api-docs',
+  });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/task-lists', taskListRoutes);

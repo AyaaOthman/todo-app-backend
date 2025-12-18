@@ -50,7 +50,7 @@ export const connectDatabase = async (): Promise<void> => {
       console.error('💡 For Railway deployment:');
       console.error('   1. Go to your Railway project → Variables tab');
       console.error('   2. Add variable: MONGODB_URI');
-      console.error('   3. Value: mongodb+srv://username:password@cluster.mongodb.net/todo-app?retryWrites=true&w=majority');
+      console.error('   3. Value: mongodb+srv://username:password@cluster.mongodb.net/Learning-Todo?retryWrites=true&w=majority');
       console.error('   4. Make sure variable name is exactly: MONGODB_URI (case-sensitive)');
       console.error('   5. Redeploy your service after adding the variable');
       console.error('');
