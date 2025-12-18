@@ -90,7 +90,7 @@ app.use('/api/tasks', taskRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server
+// Start server (only in non-serverless environments)
 const startServer = async (): Promise<void> => {
   try {
     await connectDatabase();
@@ -104,7 +104,15 @@ const startServer = async (): Promise<void> => {
   }
 };
 
-startServer();
+// Only start server if not running in Vercel serverless environment
+if (process.env.VERCEL !== '1') {
+  startServer();
+} else {
+  // In Vercel, connect to database immediately
+  connectDatabase().catch((error) => {
+    console.error('Database connection failed:', error);
+  });
+}
 
 export default app;
 
