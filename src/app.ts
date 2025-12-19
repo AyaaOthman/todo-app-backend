@@ -22,11 +22,44 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Todo App API Documentation',
-}));
+// Swagger Documentation (only in development/local environment)
+// Disabled in production/Vercel due to serverless compatibility issues
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Todo App API Documentation',
+  }));
+  console.log('📚 Swagger UI available at: http://localhost:3000/api-docs');
+} else {
+  // In production, provide a simple JSON endpoint for API documentation
+  app.get('/api-docs', (req, res) => {
+    res.json({
+      message: 'API Documentation',
+      note: 'Swagger UI is disabled in serverless environments',
+      endpoints: {
+        health: 'GET /health',
+        auth: {
+          signup: 'POST /api/auth/signup',
+          login: 'POST /api/auth/login'
+        },
+        taskLists: {
+          getAll: 'GET /api/task-lists',
+          create: 'POST /api/task-lists',
+          update: 'PUT /api/task-lists/:id',
+          delete: 'DELETE /api/task-lists/:id'
+        },
+        tasks: {
+          getAll: 'GET /api/tasks',
+          create: 'POST /api/tasks',
+          update: 'PUT /api/tasks/:id',
+          toggle: 'PATCH /api/tasks/:id',
+          delete: 'DELETE /api/tasks/:id'
+        }
+      },
+      documentation: 'See README.md for detailed API documentation'
+    });
+  });
+}
 
 // Health check endpoint
 /**

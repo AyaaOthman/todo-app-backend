@@ -45,11 +45,48 @@ app.use(async (req: Request, res: Response, next) => {
   }
 });
 
-// Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Todo App API Documentation',
-}));
+// API Documentation endpoint (Swagger UI disabled for serverless)
+app.get('/api-docs', (req: Request, res: Response) => {
+  res.json({
+    message: 'Todo App API Documentation',
+    version: '1.0.0',
+    note: 'Swagger UI is not available in serverless deployments',
+    baseUrl: 'https://todo-app-backend-dnyb.vercel.app',
+    endpoints: {
+      health: {
+        method: 'GET',
+        path: '/health',
+        description: 'Health check endpoint'
+      },
+      auth: {
+        signup: {
+          method: 'POST',
+          path: '/api/auth/signup',
+          body: { email: 'string', password: 'string', name: 'string' }
+        },
+        login: {
+          method: 'POST',
+          path: '/api/auth/login',
+          body: { email: 'string', password: 'string' }
+        }
+      },
+      taskLists: {
+        getAll: { method: 'GET', path: '/api/task-lists', requiresAuth: true },
+        create: { method: 'POST', path: '/api/task-lists', requiresAuth: true },
+        update: { method: 'PUT', path: '/api/task-lists/:id', requiresAuth: true },
+        delete: { method: 'DELETE', path: '/api/task-lists/:id', requiresAuth: true }
+      },
+      tasks: {
+        getAll: { method: 'GET', path: '/api/tasks', requiresAuth: true },
+        create: { method: 'POST', path: '/api/tasks', requiresAuth: true },
+        update: { method: 'PUT', path: '/api/tasks/:id', requiresAuth: true },
+        toggle: { method: 'PATCH', path: '/api/tasks/:id', requiresAuth: true },
+        delete: { method: 'DELETE', path: '/api/tasks/:id', requiresAuth: true }
+      }
+    },
+    authentication: 'Include "Authorization: Bearer <token>" header for protected routes'
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
