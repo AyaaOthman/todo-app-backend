@@ -17,12 +17,12 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
-        description: 'Development server',
+        url: 'https://todo-app-backend-dnyb.vercel.app',
+        description: 'Production server (Vercel)',
       },
       {
-        url: 'https://api.todoapp.com',
-        description: 'Production server',
+        url: 'http://localhost:3000',
+        description: 'Development server',
       },
     ],
     components: {

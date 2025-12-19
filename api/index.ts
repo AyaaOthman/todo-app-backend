@@ -45,11 +45,240 @@ app.use(async (req: Request, res: Response, next) => {
   }
 });
 
-// Swagger Documentation (keep original)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Todo App API Documentation',
-}));
+// Swagger JSON specification (publicly accessible)
+app.get('/swagger.json', (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json(swaggerSpec);
+});
+
+// Swagger Documentation landing page (with external viewer links)
+app.get('/api-docs', (req: Request, res: Response) => {
+  const baseUrl = 'https://todo-app-backend-dnyb.vercel.app';
+  const swaggerJsonUrl = `${baseUrl}/swagger.json`;
+  
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Todo App API Documentation</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+          background: #f5f5f5;
+        }
+        .container {
+          background: white;
+          padding: 2rem;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+          color: #2563eb;
+          margin-bottom: 0.5rem;
+        }
+        .subtitle {
+          color: #666;
+          margin-bottom: 2rem;
+        }
+        .section {
+          margin: 2rem 0;
+        }
+        .section h2 {
+          color: #333;
+          margin-bottom: 1rem;
+          border-bottom: 2px solid #2563eb;
+          padding-bottom: 0.5rem;
+        }
+        .viewer-option {
+          background: #f8fafc;
+          padding: 1.5rem;
+          margin: 1rem 0;
+          border-radius: 6px;
+          border-left: 4px solid #2563eb;
+        }
+        .viewer-option h3 {
+          margin-top: 0;
+          color: #2563eb;
+        }
+        .btn {
+          display: inline-block;
+          padding: 0.75rem 1.5rem;
+          background: #2563eb;
+          color: white;
+          text-decoration: none;
+          border-radius: 6px;
+          margin: 0.5rem 0.5rem 0.5rem 0;
+          transition: background 0.2s;
+        }
+        .btn:hover {
+          background: #1d4ed8;
+        }
+        .btn-secondary {
+          background: #64748b;
+        }
+        .btn-secondary:hover {
+          background: #475569;
+        }
+        code {
+          background: #f1f5f9;
+          padding: 0.2rem 0.5rem;
+          border-radius: 3px;
+          font-family: 'Courier New', monospace;
+          color: #dc2626;
+        }
+        .code-block {
+          background: #1e293b;
+          color: #e2e8f0;
+          padding: 1rem;
+          border-radius: 6px;
+          overflow-x: auto;
+          font-family: 'Courier New', monospace;
+          font-size: 0.9rem;
+        }
+        .endpoint {
+          background: #f8fafc;
+          padding: 0.5rem 1rem;
+          margin: 0.5rem 0;
+          border-radius: 4px;
+          font-family: 'Courier New', monospace;
+        }
+        .method {
+          display: inline-block;
+          padding: 0.2rem 0.5rem;
+          border-radius: 3px;
+          font-weight: bold;
+          margin-right: 0.5rem;
+          color: white;
+          font-size: 0.85rem;
+        }
+        .method.get { background: #10b981; }
+        .method.post { background: #3b82f6; }
+        .method.put { background: #f59e0b; }
+        .method.delete { background: #ef4444; }
+        .method.patch { background: #8b5cf6; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>📚 Todo App API Documentation</h1>
+        <p class="subtitle">Complete API documentation for the Todo App backend</p>
+
+        <div class="section">
+          <h2>🔗 View Interactive Documentation</h2>
+          
+          <div class="viewer-option">
+            <h3>Option 1: Swagger UI (Recommended)</h3>
+            <p>View the API documentation in Swagger's official UI viewer:</p>
+            <a href="https://petstore.swagger.io/?url=${encodeURIComponent(swaggerJsonUrl)}" 
+               target="_blank" 
+               class="btn">
+              📖 Open in Swagger UI
+            </a>
+          </div>
+
+          <div class="viewer-option">
+            <h3>Option 2: Redocly</h3>
+            <p>Beautiful, responsive API documentation:</p>
+            <a href="https://redocly.github.io/redoc/?url=${encodeURIComponent(swaggerJsonUrl)}" 
+               target="_blank" 
+               class="btn">
+              📄 Open in Redocly
+            </a>
+          </div>
+
+          <div class="viewer-option">
+            <h3>Option 3: Raw Swagger JSON</h3>
+            <p>Download or view the raw OpenAPI specification:</p>
+            <a href="/swagger.json" target="_blank" class="btn btn-secondary">
+              📥 View Swagger JSON
+            </a>
+            <a href="/api-docs/json" target="_blank" class="btn btn-secondary">
+              📋 Simplified JSON Docs
+            </a>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>🚀 Quick Start</h2>
+          <p><strong>Base URL:</strong> <code>${baseUrl}</code></p>
+          
+          <h3 style="margin-top: 1.5rem;">Authentication</h3>
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <span>/api/auth/signup</span> - Create account
+          </div>
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <span>/api/auth/login</span> - Login & get token
+          </div>
+
+          <h3 style="margin-top: 1.5rem;">Task Lists</h3>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <span>/api/task-lists</span> - Get all lists
+          </div>
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <span>/api/task-lists</span> - Create list
+          </div>
+
+          <h3 style="margin-top: 1.5rem;">Tasks</h3>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <span>/api/tasks</span> - Get all tasks
+          </div>
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <span>/api/tasks</span> - Create task
+          </div>
+          <div class="endpoint">
+            <span class="method patch">PATCH</span>
+            <span>/api/tasks/:id</span> - Toggle completion
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>🔐 Authentication Example</h2>
+          <p>All protected endpoints require a JWT token in the Authorization header:</p>
+          <div class="code-block">
+curl -X POST ${baseUrl}/api/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"email": "user@example.com", "password": "password123"}'
+
+# Use the token in subsequent requests:
+curl ${baseUrl}/api/task-lists \\
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>📦 Share This Documentation</h2>
+          <p>Share these links with your team:</p>
+          <ul>
+            <li><strong>This page:</strong> <code>${baseUrl}/api-docs</code></li>
+            <li><strong>Swagger UI:</strong> <a href="https://petstore.swagger.io/?url=${encodeURIComponent(swaggerJsonUrl)}" target="_blank">View Live</a></li>
+            <li><strong>Swagger JSON:</strong> <code>${baseUrl}/swagger.json</code></li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h2>🔗 Additional Resources</h2>
+          <ul>
+            <li><a href="/" target="_blank">API Root</a> - API information</li>
+            <li><a href="/health" target="_blank">Health Check</a> - Server status</li>
+            <li><a href="https://github.com/AyaaOthman/todo-app-backend" target="_blank">GitHub Repository</a></li>
+          </ul>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
 
 // JSON API Documentation endpoint (alternative to Swagger UI)
 app.get('/api-docs/json', (req: Request, res: Response) => {
